@@ -18,8 +18,9 @@ from lisa import (
     TestSuiteMetadata,
     UnsupportedCpuArchitectureException,
     create_timer,
+    simple_requirement,
 )
-from lisa.operating_system import CpuArchitecture, Redhat, Suse
+from lisa.operating_system import CpuArchitecture, Redhat, Suse, BSD
 from lisa.tools import Cat, Chrony, Dmesg, Hwclock, Lscpu, Ntp, Ntpstat, Service
 from lisa.tools.date import Date
 from lisa.tools.lscpu import CpuType
@@ -140,6 +141,9 @@ class TimeSync(TestSuite):
              clock source can be switched to a different one.
         """,
         priority=2,
+        requirement=simple_requirement(
+            unsupported_os=[BSD],
+        ),
     )
     def verify_timesync_unbind_clocksource(self, node: Node, log: Logger) -> None:
         unbind = node.shell.exists(PurePosixPath(self.unbind_clocksource))
