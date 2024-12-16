@@ -1,4 +1,6 @@
 name: azure default
+# LISA COMMAND:
+# lisa -r .\microsoft\runbook\azure.yml -v admin_private_key_file:"C:\Users\rydailey\Documents\id_rsa" -v subscription_id:0cc2a67a-58b9-4e4f-98a8-bfa46a28e896
 include:
   - path: ./tiers/tier.yml
 variable:
@@ -9,7 +11,18 @@ variable:
   - name: resource_group_name
     value: ""
   - name: marketplace_image
-    value: ""
+    #value: ""
+    #value: "thefreebsdfoundation freebsd-13_4 13_4-release 13.4.0"
+    #value: "thefreebsdfoundation freebsd-14_1 14_1-release-ufs 14.1.0"
+    #value: "thefreebsdfoundation freebsd-14_1 14_1-release-amd64-gen2-zfs 14.1.0"
+    #value: "thefreebsdfoundation freebsd-14_1 14_1-release-arm64-gen2-ufs 14.1.0"
+    value: "thefreebsdfoundation freebsd-14_0 14_0-release-amd64-gen2-ufs 14.0.0"
+  - name: images_list
+    value:
+      - "thefreebsdfoundation freebsd-13_4 13_4-release 13.4.0"
+      - "thefreebsdfoundation freebsd-14_1 14_1-release-ufs 14.1.0"
+      - "thefreebsdfoundation freebsd-14_1 14_1-release-amd64-gen2-zfs 14.1.0"
+      - "thefreebsdfoundation freebsd-14_1 14_1-release-arm64-gen2-ufs 14.1.0"
   - name: shared_gallery
     value: ""
   - name: community_gallery_image
@@ -28,9 +41,14 @@ variable:
     value: ""
     is_secret: true
   - name: admin_password
-    value: ""
+    value: "Password123!"
     is_secret: true
 concurrency: $(concurrency)
+# combinator:
+#   type: grid
+#   items:
+#     - name: marketplace_image
+#       value: $(images_list)
 notifier:
   - type: html
   - type: env_stats
@@ -49,8 +67,11 @@ platform:
         min: 2
       azure:
         marketplace: $(marketplace_image)
-        shared_gallery: $(shared_gallery)
-        community_gallery_image: $(community_gallery_image)
         vhd: $(vhd)
         location: $(location)
         vm_size: $(vm_size)
+testcase:
+  - criteria:
+      name: verify_timesync_unbind_clocksource
+extension:
+  - ../../extensions/
