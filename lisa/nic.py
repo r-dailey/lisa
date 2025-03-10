@@ -548,12 +548,17 @@ class NicsBSD(Nics):
                     rf"mlx(?P<index>\d+)_core{nic_index}@(?P<pci_slot>.*):\s+"
                 )
                 module_slot_info = self._node.execute("pciconf -l", sudo=True).stdout
-                matched = find_groups_in_lines(module_slot_info, slot_regex)[0]
-                module_version = matched["index"]
-                pci_slot = matched["pci_slot"]
-
-                # set the module name
-                module = f"mlx{module_version}_core"
+                results = find_groups_in_lines(module_slot_info, slot_regex)
+                if results is not None:
+                    match = results[0]
+                    module_version = match["index"]
+                    pci_slot = match["pci_slot"]
+                    # set the module name
+                    module = f"mlx{module_version}_core"
+                else:
+                    raise LisaException(
+                        f"Could not find pci slot and module name for {nic_name}"
+                    )
 
             self.append(
                 NicInfo(
