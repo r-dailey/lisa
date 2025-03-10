@@ -59,12 +59,17 @@ def _make_mount_raid(
 ) -> None:
     mdadm = node.tools[Mdadm]
     mdadm.create_raid(disk_list, level=level, force_run=force_run, shell=shell)
+
+    if isinstance(Node.os, BSD):
+        disk = "something"
+    else:
+        disk = "/dev/md0"
     if do_mkfs:
         mkfs = node.tools[Mkfs]
-        mkfs.format_disk("/dev/md0", FileSystem.ext4)
+        mkfs.format_disk(disk, FileSystem.ext4)
     if do_mount:
         mount = node.tools[Mount]
-        mount.mount("/dev/md0", "/data", options="nobarrier")
+        mount.mount(disk, "/data", options="nobarrier")
 
 
 @TestSuiteMetadata(

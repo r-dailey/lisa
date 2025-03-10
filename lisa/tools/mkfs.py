@@ -25,6 +25,7 @@ FileSystem = Enum(
 
 BSD_FILE_SYSTEM_MAP = {
     FileSystem.ufs: "freebsd-ufs",
+    FileSystem.ext4: "linux-data",
 }
 
 
@@ -125,7 +126,7 @@ class Mkfsbtrfs(Mkfs):
 class BSDMkfs(Mkfs):
     # /dev/da0p1
     # /dev/nvd0p1
-    _PARTITION_ID_REGEX = re.compile(r"^(?P<disk>/dev/(da|nvd)\d+)p(?P<index>\d+)$")
+    _PARTITION_ID_REGEX = re.compile(r"^(?P<disk>/dev/(da|nvd|md)\d+)(p(?P<index>\d+)|.*)$")
 
     @property
     def command(self) -> str:
@@ -153,29 +154,31 @@ class BSDMkfs(Mkfs):
         matched = find_patterns_groups_in_lines(partition, [self._PARTITION_ID_REGEX])[
             0
         ]
-        assert len(matched) == 1, "no match found for partition index"
-        partition_id = matched[0]["index"]
-        disk_name = matched[0]["disk_name"]
+        disk_name = matched[0]["disk"]
         file_system_mapped = BSD_FILE_SYSTEM_MAP[file_system]
-
-        # delete the partition
-        self.node.execute(
-            f"gpart delete -i {partition_id} {disk_name}",
-            shell=True,
-            sudo=True,
-            expected_exit_code=0,
-            expected_exit_code_failure_message=(
-                f"fail to delete partition {partition_id} on disk {disk_name}"
-            ),
-        )
-
+        command = f"gpart add -t {file_system_mapped}"
+        self.node.log.info(f"results: {matched}")
+        if matched[0]["index"] is not None:
+            # delete the partition
+            partition_id = matched[0]["index"]
+            self.node.execute(
+                f"gpart delete -i {partition_id} {disk_name}",
+                shell=True,
+                sudo=True,
+                expected_exit_code=0,
+                expected_exit_code_failure_message=(
+                    f"fail to delete partition {partition_id} on disk {disk_name}"
+                ),
+            )
+            command += f" -i {partition_id}"
+        command += f" {disk_name}" 
         # create partition with given filesystem
         self.node.execute(
-            f"gpart add -t {file_system_mapped} -i {partition_id} {disk_name}",
+            command,
             shell=True,
             sudo=True,
             expected_exit_code=0,
             expected_exit_code_failure_message=(
-                f"fail to create partition {partition_id} on disk {disk_name}"
+                f"fail to create partition on disk {disk_name}"
             ),
         )

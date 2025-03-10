@@ -25,6 +25,10 @@ class Mdadm(Tool):
     def can_install(self) -> bool:
         return True
 
+    @classmethod
+    def _freebsd_tool(cls) -> Optional[Type[Tool]]:
+        return BSDMdadm
+
     def create_raid(
         self,
         disk_list: List[str],
@@ -190,4 +194,50 @@ class WindowsMdadm(Mdadm):
             "-StorageSubSystemFriendlyName 'Windows Storage*' "
             f"-FriendlyName {pool_name} -PhysicalDisks $disks",
             force_run=True,
+        )
+
+
+class BSDMdadm(Mdadm):
+    @property
+    def can_install(self) -> bool:
+        return False
+
+    def _check_exists(self) -> bool:
+        return True
+
+    def create_raid(
+        self,
+        disk_list: List[str],
+        level: Union[int, str] = 0,
+        volume_name: str = "/dev/md0",
+        chunk_size: int = 0,
+        force_run: bool = False,
+        shell: bool = False,
+    ) -> None:
+        disks = " ".join(disk_list)
+        if level == 0:
+            command = "gstripe label"
+        elif level == 1:
+            command = "gmirror label"
+        else:
+            raise LisaException(f"raid level {level} is not supported on FreeBSD")
+        if force_run:
+            cmd = f"echo y | {command} "
+        else:
+            cmd = f"{command} "
+        if chunk_size:
+            cmd += " -s {chunk_size}"
+        cmd += f"{volume_name} {disks}"
+        self.node.execute(
+            cmd,
+            sudo=True,
+            shell=shell,
+            expected_exit_code=0,
+            expected_exit_code_failure_message=(
+                f"failed to create {volume_name} against disks {disks}"
+            ),
+        )
+        self.node.execute(
+            "sync",
+            sudo=True,
         )
