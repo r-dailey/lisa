@@ -62,11 +62,14 @@ def _make_mount_raid(
 
     if isinstance(node.os, BSD):
         disk = "/dev/da0"
+        if do_mkfs:
+            mkfs = node.tools[Mkfs]
+            mkfs.format_disk(disk, FileSystem.ufs)
     else:
         disk = "/dev/md0"
-    if do_mkfs:
-        mkfs = node.tools[Mkfs]
-        mkfs.format_disk(disk, FileSystem.ext4)
+        if do_mkfs:
+            mkfs = node.tools[Mkfs]
+            mkfs.format_disk(disk, FileSystem.ext4)
     if do_mount:
         mount = node.tools[Mount]
         mount.mount(disk, "/data", options="nobarrier")

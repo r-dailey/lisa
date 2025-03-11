@@ -25,7 +25,6 @@ FileSystem = Enum(
 
 BSD_FILE_SYSTEM_MAP = {
     FileSystem.ufs: "freebsd-ufs",
-    FileSystem.ext4: "linux-data",
 }
 
 
