@@ -125,7 +125,7 @@ class Mkfsbtrfs(Mkfs):
 class BSDMkfs(Mkfs):
     # /dev/da0p1
     # /dev/nvd0p1
-    _PARTITION_ID_REGEX = re.compile(r"^(?P<disk>/dev/(da|nvd|md)\d+)(p(?P<index>\d+)|.*)$")
+    _PARTITION_ID_REGEX = re.compile(r"^(?P<disk>/dev/(da|nvd|md|gs)\d+)(p(?P<index>\d+)|.*)$")
 
     @property
     def command(self) -> str:
@@ -156,7 +156,6 @@ class BSDMkfs(Mkfs):
         disk_name = matched[0]["disk"]
         file_system_mapped = BSD_FILE_SYSTEM_MAP[file_system]
         command = f"gpart add -t {file_system_mapped}"
-        self.node.log.info(f"results: {matched}")
         if matched[0]["index"] is not None:
             # delete the partition
             partition_id = matched[0]["index"]

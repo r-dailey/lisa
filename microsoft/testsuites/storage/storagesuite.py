@@ -61,7 +61,7 @@ def _make_mount_raid(
     mdadm.create_raid(disk_list, level=level, force_run=force_run, shell=shell)
 
     if isinstance(node.os, BSD):
-        disk = "/dev/gs0"
+        disk = "/dev/da1p1"
         if do_mkfs:
             mkfs = node.tools[Mkfs]
             mkfs.format_disk(disk, FileSystem.ufs)
